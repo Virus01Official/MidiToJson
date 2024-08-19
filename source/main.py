@@ -6,14 +6,22 @@ def midi_to_json(midi_file):
     midi_data = []
 
     current_time = 0
-    for i, track in enumerate(mid.tracks):
+    tempo = 500000  # Default tempo (120 BPM in microseconds per beat)
+    ticks_per_beat = mid.ticks_per_beat
+
+    for track in mid.tracks:
         for msg in track:
             current_time += msg.time
-            if msg.type == 'note_on' and msg.velocity > 0:
+            if msg.type == 'set_tempo':
+                tempo = msg.tempo
+            elif msg.type == 'note_on' and msg.velocity > 0:
+                bpm = mido.tempo2bpm(tempo)
+                time_in_seconds = mido.tick2second(current_time, ticks_per_beat, tempo)
                 midi_data.append({
-                    'time': current_time,
+                    'time': time_in_seconds,
                     'note': msg.note,
-                    'velocity': msg.velocity
+                    'velocity': msg.velocity,
+                    'bpm': bpm
                 })
 
     return midi_data
